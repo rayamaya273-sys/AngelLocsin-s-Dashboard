@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Angel Locsin's Weather Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+            --success: #2ecc71;
+            --warning: #f39c12;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .demo-banner {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--warning);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo i {
+            font-size: 2.5rem;
+            color: var(--secondary);
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
+        .demo-label {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: var(--warning);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .card-title {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+        
+        .card-icon {
+            font-size: 1.8rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--light);
+        }
+        
+        .wind-icon {
+            color: #3498db;
+        }
+        
+        .rain-icon {
+            color: #2980b9;
+        }
+        
+        .temp-icon {
+            color: #e74c3c;
+        }
+        
+        .humidity-icon {
+            color: #27ae60;
+        }
+        
+        .value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--secondary);
+            margin: 10px 0;
+        }
+        
+        .unit {
+            font-size: 1rem;
+            color: var(--dark);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: var(--light);
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--dark);
+        }
+        
+        .instructions {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .instructions h2 {
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        .data-source {
+            background: #fff8e1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid var(--warning);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: var(--dark);
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .demo-banner {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin-top: 10px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="demo-banner">DEMO DATA - ESP32 NOT CONNECTED</div>
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-cloud-sun"></i>
+                    <h1>Angel Locsin's Weather Dashboard</h1>
+                </div>
+                <div class="status">
+                    <span class="status-dot"></span>
+                    <span>Device Offline</span>
+                    <span id="lastUpdate">Last update: --</span>
+                </div>
+            </div>
+        </header>
+        
+        <div class="dashboard">
+            <div class="card">
+                <div class="demo-label">SIMULATED</div>
+                <div class="card-header">
+                    <h2 class="card-title">Wind Speed</h2>
+                    <div class="card-icon wind-icon">
+                        <i class="fas fa-wind"></i>
+                    </div>
+                </div>
+                <div class="value" id="windValue">0.0 <span class="unit">m/s</span></div>
+                <div class="chart-container">
+                    <canvas id="windChart"></canvas>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="windMax">0.0 m/s</div>
+                        <div class="stat-label">Max</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="windAvg">0.0 m/s</div>
+                        <div class="stat-label">Average</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="windMin">0.0 m/s</div>
+                        <div class="stat-label">Min</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="demo-label">SIMULATED</div>
+                <div class="card-header">
+                    <h2 class="card-title">Rainfall</h2>
+                    <div class="card-icon rain-icon">
+                        <i class="fas fa-cloud-rain"></i>
+                    </div>
+                </div>
+                <div class="value" id="rainValue">0.0 <span class="unit">mm</span></div>
+                <div class="chart-container">
+                    <canvas id="rainChart"></canvas>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="rainTotal">0.0 mm</div>
+                        <div class="stat-label">Total Today</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="rainRate">0.0 mm/h</div>
+                        <div class="stat-label">Current Rate</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="rainLastHour">0.0 mm</div>
+                        <div class="stat-label">Last Hour</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="demo-label">SIMULATED</div>
+                <div class="card-header">
+                    <h2 class="card-title">Temperature</h2>
+                    <div class="card-icon temp-icon">
+                        <i class="fas fa-thermometer-half"></i>
+                    </div>
+                </div>
+                <div class="value" id="tempValue">0.0 <span class="unit">°C</span></div>
+                <div class="chart-container">
+                    <canvas id="tempChart"></canvas>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="tempMax">0.0 °C</div>
+                        <div class="stat-label">Max</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="tempAvg">0.0 °C</div>
+                        <div class="stat-label">Average</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="tempMin">0.0 °C</div>
+                        <div class="stat-label">Min</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="demo-label">SIMULATED</div>
+                <div class="card-header">
+                    <h2 class="card-title">Humidity</h2>
+                    <div class="card-icon humidity-icon">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                </div>
+                <div class="value" id="humidityValue">0.0 <span class="unit">%</span></div>
+                <div class="chart-container">
+                    <canvas id="humidityChart"></canvas>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="humidityMax">0.0 %</div>
+                        <div class="stat-label">Max</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="humidityAvg">0.0 %</div>
+                        <div class="stat-label">Average</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="humidityMin">0.0 %</div>
+                        <div class="stat-label">Min</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h2>How to Connect Your ESP32</h2>
+            <ol>
+                <li>Set up your ESP32 to collect data from your sensors</li>
+                <li>Choose a data storage method:
+                    <ul>
+                        <li>Google Sheets with Apps Script</li>
+                        <li>Firebase Realtime Database</li>
+                        <li>ThingSpeak IoT Platform</li>
+                        <li>Local server or SD card storage</li>
+                    </ul>
+                </li>
+                <li>Modify the JavaScript code in this dashboard to fetch data from your chosen storage</li>
+                <li>Update the API endpoint in the code to match your data source</li>
+            </ol>
+            
+            <div class="data-source">
+                <h3><i class="fas fa-info-circle"></i> Current Data Source</h3>
+                <p>This dashboard is currently showing <strong>simulated data</strong> that's generated randomly in the browser. The data is not coming from your ESP32 yet.</p>
+                <p>To connect real data, you'll need to set up an API endpoint that provides JSON data in the format expected by the dashboard.</p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>ESP32 Weather Station | Currently showing demo data</p>
+            <p>© 2023 Angel Locsin's Weather Dashboard</p>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize charts with empty data
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            elements: {
+                line: {
+                    tension: 0.3
+                }
+            }
+        };
+        
+        // Initialize charts with no data
+        const windChart = new Chart(
+            document.getElementById('windChart'),
+            {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Wind Speed (m/s)',
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        data: [],
+                        fill: true
+                    }]
+                },
+                options: chartOptions
+            }
+        );
+        
+        const rainChart = new Chart(
+            document.getElementById('rainChart'),
+            {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Rainfall (mm)',
+                        backgroundColor: '#2980b9',
+                        data: [],
+                    }]
+                },
+                options: chartOptions
+            }
+        );
+        
+        const tempChart = new Chart(
+            document.getElementById('tempChart'),
+            {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Temperature (°C)',
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        data: [],
+                        fill: true
+                    }]
+                },
+                options: chartOptions
+            }
+        );
+        
+        const humidityChart = new Chart(
+            document.getElementById('humidityChart'),
+            {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Humidity (%)',
+                        borderColor: '#27ae60',
+                        backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                        data: [],
+                        fill: true
+                    }]
+                },
+                options: chartOptions
+            }
+        );
+
+        // Generate realistic weather patterns
+        function generateRealisticWeather() {
+            const now = new Date();
+            const hour = now.getHours();
+            
+            // Simulate daily patterns
+            const tempBase = 25 + (Math.sin((hour - 6) * Math.PI / 12) * 8); // Colder at night, warmer during day
+            const humidityBase = 60 - (Math.sin((hour - 6) * Math.PI / 12) * 20); // More humid at night
+            const windBase = 2 + (Math.random() * 3); // Base wind speed
+            
+            // Add some randomness
+            const temperature = (tempBase + (Math.random() * 4 - 2)).toFixed(1);
+            const humidity = Math.max(30, Math.min(90, (humidityBase + (Math.random() * 10 - 5)))).toFixed(1);
+            const windSpeed = (windBase + (Math.random() * 3)).toFixed(1);
+            
+            // Occasionally rain (more likely at night)
+            const rainChance = hour > 18 || hour < 6 ? 0.4 : 0.1;
+            let rainfall = (Math.random() > rainChance ? 0 : (Math.random() * 3).toFixed(1));
+            
+            return { temperature, humidity, windSpeed, rainfall };
+        }
+        
+        // Simulate data updates with realistic patterns
+        function updateData() {
+            const weather = generateRealisticWeather();
+            
+            // Update values
+            document.getElementById('windValue').innerHTML = `${weather.windSpeed} <span class="unit">m/s</span>`;
+            document.getElementById('rainValue').innerHTML = `${weather.rainfall} <span class="unit">mm</span>`;
+            document.getElementById('tempValue').innerHTML = `${weather.temperature} <span class="unit">°C</span>`;
+            document.getElementById('humidityValue').innerHTML = `${weather.humidity} <span class="unit">%</span>`;
+            
+            // Update stats with realistic values
+            document.getElementById('windMax').textContent = `${(weather.windSpeed * 1.5).toFixed(1)} m/s`;
+            document.getElementById('windAvg').textContent = `${(weather.windSpeed * 0.9).toFixed(1)} m/s`;
+            document.getElementById('windMin').textContent = `${(weather.windSpeed * 0.6).toFixed(1)} m/s`;
+            
+            document.getElementById('rainTotal').textContent = `${(weather.rainfall * 8).toFixed(1)} mm`;
+            document.getElementById('rainRate').textContent = `${weather.rainfall} mm/h`;
+            document.getElementById('rainLastHour').textContent = `${(weather.rainfall * 2).toFixed(1)} mm`;
+            
+            document.getElementById('tempMax').textContent = `${(weather.temperature * 1.15).toFixed(1)} °C`;
+            document.getElementById('tempAvg').textContent = `${(weather.temperature * 0.97).toFixed(1)} °C`;
+            document.getElementById('tempMin').textContent = `${(weather.temperature * 0.8).toFixed(1)} °C`;
+            
+            document.getElementById('humidityMax').textContent = `${(weather.humidity * 1.1).toFixed(1)} %`;
+            document.getElementById('humidityAvg').textContent = `${(weather.humidity * 0.95).toFixed(1)} %`;
+            document.getElementById('humidityMin').textContent = `${(weather.humidity * 0.85).toFixed(1)} %`;
+            
+            // Update charts with new data point
+            const now = new Date();
+            const timeLabel = now.getHours() + ':' + now.getMinutes().toString().padStart(2, '0');
+            
+            // Update wind chart
+            windChart.data.labels.push(timeLabel);
+            windChart.data.datasets[0].data.push(parseFloat(weather.windSpeed));
+            if (windChart.data.labels.length > 10) {
+                windChart.data.labels.shift();
+                windChart.data.datasets[0].data.shift();
+            }
+            windChart.update();
+            
+            // Update rain chart
+            rainChart.data.labels.push(timeLabel);
+            rainChart.data.datasets[0].data.push(parseFloat(weather.rainfall));
+            if (rainChart.data.labels.length > 10) {
+                rainChart.data.labels.shift();
+                rainChart.data.datasets[0].data.shift();
+            }
+            rainChart.update();
+            
+            // Update temperature chart
+            tempChart.data.labels.push(timeLabel);
+            tempChart.data.datasets[0].data.push(parseFloat(weather.temperature));
+            if (tempChart.data.labels.length > 10) {
+                tempChart.data.labels.shift();
+                tempChart.data.datasets[0].data.shift();
+            }
+            tempChart.update();
+            
+            // Update humidity chart
+            humidityChart.data.labels.push(timeLabel);
+            humidityChart.data.datasets[0].data.push(parseFloat(weather.humidity));
+            if (humidityChart.data.labels.length > 10) {
+                humidityChart.data.labels.shift();
+                humidityChart.data.datasets[0].data.shift();
+            }
+            humidityChart.update();
+            
+            // Update last update time
+            document.getElementById('lastUpdate').textContent = `Last update: ${timeLabel}`;
+        }
+        
+        // Initialize with empty data
+        function initializeCharts() {
+            const now = new Date();
+            
+            // Create initial empty data
+            for (let i = 9; i >= 0; i--) {
+                const time = new Date(now.getTime() - (i * 300000)); // 5 minute intervals
+                const timeLabel = time.getHours() + ':' + time.getMinutes().toString().padStart(2, '0');
+                
+                windChart.data.labels.push(timeLabel);
+                windChart.data.datasets[0].data.push(0);
+                
+                rainChart.data.labels.push(timeLabel);
+                rainChart.data.datasets[0].data.push(0);
+                
+                tempChart.data.labels.push(timeLabel);
+                tempChart.data.datasets[0].data.push(0);
+                
+                humidityChart.data.labels.push(timeLabel);
+                humidityChart.data.datasets[0].data.push(0);
+            }
+            
+            windChart.update();
+            rainChart.update();
+            tempChart.update();
+            humidityChart.update();
+        }
+        
+        // Initialize the dashboard
+        initializeCharts();
+        
+        // Wait a moment before showing data to simulate loading
+        setTimeout(() => {
+            // Initial data update
+            updateData();
+            
+            // Simulate periodic data updates (every 5 seconds for demo)
+            setInterval(updateData, 5000);
+        }, 1000);
+        
+        // This function would be used when you have a real data source
+        async function fetchRealData() {
+            try {
+                // Replace with your actual API endpoint
+                const response = await fetch('YOUR_API_ENDPOINT_HERE');
+                const data = await response.json();
+                
+                // Update your UI with the real data
+                document.getElementById('windValue').innerHTML = `${data.windSpeed} <span class="unit">m/s</span>`;
+                document.getElementById('rainValue').innerHTML = `${data.rainfall} <span class="unit">mm</span>`;
+                document.getElementById('tempValue').innerHTML = `${data.temperature} <span class="unit">°C</span>`;
+                document.getElementById('humidityValue').innerHTML = `${data.humidity} <span class="unit">%</span>`;
+                
+                // Update charts with real data
+                // ... (implementation would depend on your data structure)
+                
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+    </script>
+</body>
+</html>
